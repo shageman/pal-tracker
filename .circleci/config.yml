@@ -43,10 +43,24 @@ jobs:
             sudo apt-get install cf-cli
 
       - run:
-          name: Deploy to review
+          name: Install jq
+          command: |
+            sudo apt-get -y install jq
+
+      - run:
+          name: Install flyway
+          command: |
+            curl https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/5.1.1/flyway-commandline-5.1.1-linux-x64.tar.gz | tar xvz
+
+
+      - run:
+          name: Deploy to review and migrate
           command: |
             cf login -a $CF_API -u $CF_USERNAME -p $CF_PASSWORD -o $CF_ORG -s $ENVIRONMENT
             cf push -f manifest-$ENVIRONMENT.yml -p artifacts/pal-tracker-$CIRCLE_SHA1.jar
+
+            ./scripts/migrate-databases.sh pal-tracker . /home/circleci/project/
+
 
   deployToProd:
     docker:
@@ -69,10 +83,24 @@ jobs:
             sudo apt-get install cf-cli
 
       - run:
-          name: Deploy to prod
+          name: Install jq
+          command: |
+            sudo apt-get -y install jq
+
+      - run:
+          name: Install flyway
+          command: |
+            curl https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/5.1.1/flyway-commandline-5.1.1-linux-x64.tar.gz | tar xvz
+
+
+      - run:
+          name: Deploy to prod and migrate
           command: |
             cf login -a $CF_API -u $CF_USERNAME -p $CF_PASSWORD -o $CF_ORG -s $ENVIRONMENT
             cf push -f manifest-$ENVIRONMENT.yml -p artifacts/pal-tracker-$CIRCLE_SHA1.jar
+
+            ./scripts/migrate-databases.sh pal-tracker . /home/circleci/project/
+
 workflows:
   version: 2
   deployment-pipeline:
